@@ -124,7 +124,7 @@ extension LayoutRefreshController {
         DiagnosticsEventRecorder.shared.recordLifecycle(
             name: "relayout.followup.requested n=\(followUps.count)"
         )
-        requestRelayout(reason: .workspaceTransition, affectedWorkspaceIds: followUps)
+        requestImmediateRelayout(reason: .workspaceTransition, affectedWorkspaceIds: followUps)
     }
 
     private func applyEffectVisibility(
