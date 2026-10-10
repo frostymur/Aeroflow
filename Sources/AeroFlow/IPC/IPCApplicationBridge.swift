@@ -6,10 +6,10 @@ import AeroFlowIPC
 import Foundation
 
 actor IPCApplicationBridge {
-    private let controller: WMController
-    private let appVersion: String?
-    private let eventBroker: IPCEventBroker
-    private let sessionToken: String
+    nonisolated private let controller: WMController
+    nonisolated private let appVersion: String?
+    nonisolated private let eventBroker: IPCEventBroker
+    nonisolated private let sessionToken: String
     private let authorizationToken: String
     private var lastPublishedDisplays: IPCResult?
 
@@ -190,6 +190,25 @@ actor IPCApplicationBridge {
             }
         }
         return events
+    }
+
+    /// Publishes an event synchronously from a MainActor caller.
+    /// The snapshot is built in the current main-thread turn and yielded
+    /// straight to subscribers, so latency-critical channels (focus,
+    /// active workspace) are observed at the bookkeeping flip instead of
+    /// queueing behind the in-flight relayout that occupies the main
+    /// thread. `displayChanged` must keep using `publishEvent` because its
+    /// dedup state (`lastPublishedDisplays`) is actor-isolated.
+    @MainActor
+    func publishEventNow(_ channel: IPCSubscriptionChannel) {
+        guard hasSubscribers(for: channel) else { return }
+        let queryRouter = IPCQueryRouter(controller: controller, appVersion: appVersion, sessionToken: sessionToken)
+        let envelope = IPCEventEnvelope.success(
+            id: UUID().uuidString,
+            channel: channel,
+            result: IPCResult(channel: channel, queryRouter: queryRouter)
+        )
+        eventBroker.publishNow(envelope)
     }
 
     func publishEvent(_ channel: IPCSubscriptionChannel) async {

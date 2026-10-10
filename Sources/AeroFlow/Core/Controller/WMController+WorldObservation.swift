@@ -12,18 +12,22 @@ extension WMController {
             surfaceReconciler.noteWorldChanged()
         }
         let changeSet = focusNotificationDispatcher.notifyFocusChangesIfNeeded()
-        if let ipcApplicationBridge {
+        guard let ipcApplicationBridge else { return }
+        // Fast path: publish the latency-critical channels synchronously on
+        // the main thread, at the bookkeeping flip itself. Deferring to a
+        // Task + actor hop queues the event behind the in-flight relayout
+        // (AX writes that occupy the main thread), so subscribers like the
+        // bar highlight land tens of ms after the switch.
+        if changeSet.focusChanged {
+            ipcApplicationBridge.publishEventNow(.focus)
+        }
+        if changeSet.workspaceChanged || changeSet.monitorChanged {
+            ipcApplicationBridge.publishEventNow(.activeWorkspace)
+        }
+        if changeSet.monitorChanged {
+            ipcApplicationBridge.publishEventNow(.focusedMonitor)
             Task {
-                if changeSet.focusChanged {
-                    await ipcApplicationBridge.publishEvent(.focus)
-                }
-                if changeSet.workspaceChanged || changeSet.monitorChanged {
-                    await ipcApplicationBridge.publishEvent(.activeWorkspace)
-                }
-                if changeSet.monitorChanged {
-                    await ipcApplicationBridge.publishEvent(.focusedMonitor)
-                    await ipcApplicationBridge.publishEvent(.displayChanged)
-                }
+                await ipcApplicationBridge.publishEvent(.displayChanged)
             }
         }
     }

@@ -46,9 +46,45 @@ final class IPCEventDemandTracker: @unchecked Sendable {
     }
 }
 
-actor IPCEventBroker {
+final class IPCEventContinuationTable: @unchecked Sendable {
+    private let lock = NSLock()
     private var continuations: [IPCSubscriptionChannel: [UUID: AsyncStream<IPCEventEnvelope>.Continuation]] = [:]
-    private let demandTracker: IPCEventDemandTracker
+
+    func insert(id: UUID, channel: IPCSubscriptionChannel, continuation: AsyncStream<IPCEventEnvelope>.Continuation) {
+        lock.lock()
+        defer { lock.unlock() }
+        continuations[channel, default: [:]][id] = continuation
+    }
+
+    @discardableResult
+    func remove(id: UUID, from channel: IPCSubscriptionChannel) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard continuations[channel]?.removeValue(forKey: id) != nil else { return false }
+        if continuations[channel]?.isEmpty == true {
+            continuations.removeValue(forKey: channel)
+        }
+        return true
+    }
+
+    nonisolated func snapshot(for channel: IPCSubscriptionChannel) -> [AsyncStream<IPCEventEnvelope>.Continuation] {
+        lock.lock()
+        defer { lock.unlock() }
+        return continuations[channel]?.values.map { $0 } ?? []
+    }
+
+    func finishAll() -> [AsyncStream<IPCEventEnvelope>.Continuation] {
+        lock.lock()
+        defer { lock.unlock() }
+        let all = continuations.values.flatMap(\.values)
+        continuations.removeAll()
+        return all
+    }
+}
+
+actor IPCEventBroker {
+    nonisolated private let continuationTable = IPCEventContinuationTable()
+    nonisolated private let demandTracker: IPCEventDemandTracker
 
     init(demandTracker: IPCEventDemandTracker = IPCEventDemandTracker()) {
         self.demandTracker = demandTracker
@@ -67,7 +103,7 @@ actor IPCEventBroker {
         }
 
         if let capturedContinuation {
-            continuations[channel, default: [:]][id] = capturedContinuation
+            continuationTable.insert(id: id, channel: channel, continuation: capturedContinuation)
             demandTracker.increment(channel)
         }
         return IPCEventStreamRegistration(channel: channel, id: id, stream: stream)
@@ -78,8 +114,15 @@ actor IPCEventBroker {
     }
 
     func publish(_ event: IPCEventEnvelope) {
-        guard let currentContinuations = continuations[event.channel]?.values else { return }
-        for continuation in currentContinuations {
+        publishNow(event)
+    }
+
+    /// Yields the event to current subscribers without an actor hop.
+    /// AsyncStream continuations are thread-safe, so callers on the main
+    /// thread can publish synchronously instead of queueing behind an
+    /// in-flight relayout.
+    nonisolated func publishNow(_ event: IPCEventEnvelope) {
+        for continuation in continuationTable.snapshot(for: event.channel) {
             continuation.yield(event)
         }
     }
@@ -89,8 +132,7 @@ actor IPCEventBroker {
     }
 
     func finishAll() {
-        let currentContinuations = continuations.values.flatMap(\.values)
-        continuations.removeAll()
+        let currentContinuations = continuationTable.finishAll()
         demandTracker.reset()
         for continuation in currentContinuations {
             continuation.finish()
@@ -102,10 +144,7 @@ actor IPCEventBroker {
     }
 
     private func removeContinuation(id: UUID, from channel: IPCSubscriptionChannel) {
-        guard continuations[channel]?.removeValue(forKey: id) != nil else { return }
+        guard continuationTable.remove(id: id, from: channel) else { return }
         demandTracker.decrement(channel)
-        if continuations[channel]?.isEmpty == true {
-            continuations.removeValue(forKey: channel)
-        }
     }
 }
