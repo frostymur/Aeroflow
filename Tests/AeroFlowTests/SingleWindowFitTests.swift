@@ -449,7 +449,10 @@ final class NiriSingleWindowFitEngineTests: XCTestCase {
         let frame = placement.frame(for: size)
 
         XCTAssertEqual(frame.minX, monitor.visibleFrame.maxX - 1.0)
-        XCTAssertEqual(frame.minY, 40)
+        XCTAssertEqual(
+            frame.minY,
+            monitor.visibleFrame.minY + 1 - size.height
+        )
         XCTAssertEqual(frame.width, size.width)
         XCTAssertEqual(frame.height, size.height)
     }

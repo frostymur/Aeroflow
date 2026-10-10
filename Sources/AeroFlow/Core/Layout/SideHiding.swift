@@ -142,16 +142,24 @@ struct HiddenWindowPlacementResolver {
     ) -> CGPoint {
         switch orientation {
         case .horizontal:
+            // Park the window below the screen's bottom edge, leaving a
+            // 1pt sliver at the bottom corner. Geometry is in bottom-left-
+            // origin screen coordinates (y=0 at the screen bottom), so
+            // "below the screen" is a negative y. macOS clamps the parked
+            // frame so the 27pt title bar stays grabbable above the bottom
+            // edge — that clamped sliver is the visible remnant, and
+            // clamp-tolerant park verification accepts it without retries.
+            let cornerY = monitor.visibleFrame.minY - size.height + reveal
             switch edge {
             case .minimum:
                 return CGPoint(
                     x: monitor.visibleFrame.minX - size.width + reveal,
-                    y: orthogonalOrigin
+                    y: cornerY
                 )
             case .maximum:
                 return CGPoint(
                     x: monitor.visibleFrame.maxX - reveal,
-                    y: orthogonalOrigin
+                    y: cornerY
                 )
             }
         case .vertical:

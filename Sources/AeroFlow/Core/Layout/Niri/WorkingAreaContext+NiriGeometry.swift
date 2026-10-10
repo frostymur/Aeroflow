@@ -194,7 +194,10 @@ extension WorkingAreaContext {
         case .maximum:
             x = edgeFrame.maxX - edgeReveal
         }
-        let origin = CGPoint(x: x, y: rect.minY)
+        let origin = CGPoint(
+            x: x,
+            y: edgeFrame.minY + edgeReveal - rect.height
+        )
         return CGRect(origin: origin, size: CGSize(width: rect.width, height: rect.height))
     }
 }
