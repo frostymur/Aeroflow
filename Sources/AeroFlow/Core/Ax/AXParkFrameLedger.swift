@@ -119,13 +119,20 @@ final class AXParkFrameLedger {
         guard let observedFrame = result.writeResult.observedFrame else {
             return .readbackFailed
         }
-        guard observedFrame.approximatelyEqual(
+        if observedFrame.approximatelyEqual(
             to: result.targetFrame,
             tolerance: FrameTolerance.frameWrite
-        ) else {
-            return .verificationMismatch
+        ) {
+            return nil
         }
-        return nil
+        // The OS clamps parked frames so the title bar stays grabbable
+        // (a ~27pt sliver must remain on-screen above the bottom edge).
+        // A readback within the clamp tolerance of the park target means
+        // the window is parked, so accept it instead of retrying.
+        if axFrameWithinParkClamp(observedFrame, target: result.targetFrame, components: .all) {
+            return nil
+        }
+        return .verificationMismatch
     }
 
     private func makeNextParkFrameRequestId() -> AXFrameRequestId {
