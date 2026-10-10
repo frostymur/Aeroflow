@@ -12,6 +12,7 @@ extension AXWindowService {
         let currentFrameHint: CGRect?
         let components: AXFrameComponents
         let verify: Bool
+        let clampTolerant: Bool
     }
 
     private enum FrameWriteAttribute {
@@ -34,12 +35,18 @@ extension AXWindowService {
         frame: CGRect,
         currentFrameHint: CGRect? = nil,
         components: AXFrameComponents = .all,
-        verify: Bool = true
+        verify: Bool = true,
+        clampTolerant: Bool = false
     ) -> AXFrameWriteResult {
         setFrame(
             window,
             frame: frame,
-            options: FrameWriteOptions(currentFrameHint: currentFrameHint, components: components, verify: verify),
+            options: FrameWriteOptions(
+                currentFrameHint: currentFrameHint,
+                components: components,
+                verify: verify,
+                clampTolerant: clampTolerant
+            ),
             timing: nil
         )
     }
@@ -105,14 +112,20 @@ extension AXWindowService {
         frame: CGRect,
         currentFrameHint: CGRect? = nil,
         components: AXFrameComponents = .all,
-        verify: Bool = true
+        verify: Bool = true,
+        clampTolerant: Bool = false
     ) -> (result: AXFrameWriteResult, timing: AXFrameSetterTiming) {
         var timing = AXFrameSetterTiming()
         let result = withUnsafeMutablePointer(to: &timing) { pointer in
             setFrame(
                 window,
                 frame: frame,
-                options: FrameWriteOptions(currentFrameHint: currentFrameHint, components: components, verify: verify),
+                options: FrameWriteOptions(
+                    currentFrameHint: currentFrameHint,
+                    components: components,
+                    verify: verify,
+                    clampTolerant: clampTolerant
+                ),
                 timing: pointer
             )
         }
@@ -126,15 +139,26 @@ extension AXWindowService {
         options: FrameWriteOptions
     ) -> AXFrameWriteFailureReason? {
         if errors.size != .success {
-            mapFrameWriteFailure(errors.size, attribute: .size)
+            return mapFrameWriteFailure(errors.size, attribute: .size)
         } else if errors.position != .success {
-            mapFrameWriteFailure(errors.position, attribute: .position)
+            return mapFrameWriteFailure(errors.position, attribute: .position)
         } else if !options.verify {
-            nil
+            return nil
         } else if let observedFrame {
-            axFrameMatches(observedFrame, target: frame, components: options.components) ? nil : .verificationMismatch
+            if axFrameMatches(observedFrame, target: frame, components: options.components) {
+                return nil
+            }
+            if options.clampTolerant,
+               axFrameWithinParkClamp(observedFrame, target: frame, components: options.components)
+            {
+                // The OS clamped the parked window frame (a title-bar sliver
+                // must stay grabbable below the screen top); the write itself
+                // succeeded, so accept the clamped position.
+                return nil
+            }
+            return .verificationMismatch
         } else {
-            .readbackFailed
+            return .readbackFailed
         }
     }
 

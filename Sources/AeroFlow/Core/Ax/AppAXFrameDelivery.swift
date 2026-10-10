@@ -111,7 +111,7 @@ final class AppAXFrameDelivery {
         completion: @escaping AppAXFrameMailbox.Completion
     ) -> AppAXFrameMailbox.Outcome {
         parkFrameMailbox.enqueue(
-            makeFrameWriteRequests(frames, generations: parkFrameWriteGenerations, forceVerification: true),
+            makeFrameWriteRequests(frames, generations: parkFrameWriteGenerations, forceVerification: true, clampTolerant: true),
             callbackGeneration: callbackGeneration,
             completion: completion
         )
@@ -185,7 +185,8 @@ final class AppAXFrameDelivery {
     private func makeFrameWriteRequests(
         _ frames: [AXFrameApplicationRequest],
         generations: LockedWindowGenerationMap,
-        forceVerification: Bool
+        forceVerification: Bool,
+        clampTolerant: Bool = false
     ) -> [AppAXFrameWriteRequest] {
         frames.map {
             AppAXFrameWriteRequest(
@@ -198,7 +199,8 @@ final class AppAXFrameDelivery {
                 components: $0.components,
                 generation: generations.nextGeneration(for: $0.windowId),
                 verify: forceVerification || $0.verify,
-                traceRequestId: $0.traceRequestId
+                traceRequestId: $0.traceRequestId,
+                clampTolerant: clampTolerant
             )
         }
     }

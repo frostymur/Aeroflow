@@ -116,6 +116,12 @@ struct AppAXFrameBatchWriter {
                 }
                 continue
             }
+            let writeFrame: (AXWindowRef, CGRect, CGRect?, AXFrameComponents, Bool) -> AXFrameWriteResult = {
+                AXWindowService.setFrame(
+                    $0, frame: $1, currentFrameHint: $2, components: $3, verify: $4,
+                    clampTolerant: request.clampTolerant
+                )
+            }
             if let activeTrace {
                 let item = traceItems.flatMap { items in
                     items.indices.contains(index) ? items[index] : nil
@@ -125,6 +131,7 @@ struct AppAXFrameBatchWriter {
                     pid: trace.context.pid,
                     callbackGeneration: trace.context.callbackGeneration,
                     generations: generations,
+                    writeFrame: writeFrame,
                     traceLane: trace.lane
                 ) { attempt in
                     activeTrace.recordAttempt(request, item: item, attempt: attempt)
@@ -135,6 +142,7 @@ struct AppAXFrameBatchWriter {
                     pid: trace.context.pid,
                     callbackGeneration: trace.context.callbackGeneration,
                     generations: generations,
+                    writeFrame: writeFrame,
                     traceLane: trace.lane
                 ))
             }

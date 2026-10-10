@@ -57,8 +57,13 @@ func applyFrameWriteRequest(
     func performWrite(_ window: AXWindowRef, attempt: UInt8) -> AXFrameWriteResult {
         let result: AXFrameWriteResult
         if let traceAttempt {
-            result = AppAXFrameTraceContext(request: request, metricsToken: metricsToken, lane: traceLane)
-                .write(window, attempt: attempt, traceAttempt: traceAttempt)
+            let context = AppAXFrameTraceContext(
+                request: request,
+                metricsToken: metricsToken,
+                lane: traceLane,
+                clampTolerant: request.clampTolerant
+            )
+            result = context.write(window, attempt: attempt, traceAttempt: traceAttempt)
         } else {
             result = AXWriteMetrics.shared.measure(metricsToken, lane: traceLane) {
                 writeFrame(window, request.frame, request.currentFrameHint, request.components, request.verify)
@@ -128,6 +133,7 @@ private struct AppAXFrameTraceContext {
     let request: AppAXFrameWriteRequest
     let metricsToken: AXWriteMetrics.ContextToken
     let lane: AppAXFrameLane
+    let clampTolerant: Bool
 
     func write(
         _ window: AXWindowRef,
@@ -148,7 +154,8 @@ private struct AppAXFrameTraceContext {
                 frame: request.frame,
                 currentFrameHint: request.currentFrameHint,
                 components: request.components,
-                verify: request.verify
+                verify: request.verify,
+                clampTolerant: clampTolerant
             )
         } succeeded: { $0.result.failureReason == nil }
         traceAttempt(.init(number: attempt, startedNs: startedNs, timing: traced.timing, result: traced.result))

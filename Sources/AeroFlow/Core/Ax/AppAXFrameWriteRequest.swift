@@ -18,6 +18,10 @@ struct AppAXFrameWriteRequest: Sendable {
     let generation: UInt64
     let verify: Bool
     let traceRequestId: UInt64
+    /// Park lane only: treat a readback that is off by the OS title-bar
+    /// clamp (see `parkClampTolerance`) as verified success instead of
+    /// `verificationMismatch`.
+    let clampTolerant: Bool
 
     init(
         requestId: AXFrameRequestId,
@@ -29,7 +33,8 @@ struct AppAXFrameWriteRequest: Sendable {
         components: AXFrameComponents = .all,
         generation: UInt64,
         verify: Bool,
-        traceRequestId: UInt64 = 0
+        traceRequestId: UInt64 = 0,
+        clampTolerant: Bool = false
     ) {
         self.requestId = requestId
         self.pid = pid
@@ -41,6 +46,7 @@ struct AppAXFrameWriteRequest: Sendable {
         self.generation = generation
         self.verify = verify
         self.traceRequestId = traceRequestId
+        self.clampTolerant = clampTolerant
     }
 }
 

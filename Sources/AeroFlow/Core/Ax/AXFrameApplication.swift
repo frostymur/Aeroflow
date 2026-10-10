@@ -25,6 +25,28 @@ func axFrameMatches(
                 && abs(observed.height - target.height) < tolerance))
 }
 
+/// Maximum positional offset the OS may apply when clamping a parked
+/// window before verification fails. macOS keeps a grabbable title-bar
+/// sliver of standard windows below the screen top, so a park target
+/// requesting a 1pt on-screen sliver reads back ~27pt off.
+let parkClampTolerance: CGFloat = 64
+
+/// Park-lane verification: the positional component may differ from the
+/// target by up to `parkClampTolerance` (the OS title-bar clamp) while the
+/// size component stays strict — the clamp only ever moves the window.
+func axFrameWithinParkClamp(
+    _ observed: CGRect,
+    target: CGRect,
+    components: AXFrameComponents
+) -> Bool {
+    (!components.contains(.position)
+        || (abs(observed.origin.x - target.origin.x) <= parkClampTolerance
+            && abs(observed.origin.y - target.origin.y) <= parkClampTolerance))
+        && (!components.contains(.size)
+            || (abs(observed.width - target.width) < FrameTolerance.frameWrite
+                && abs(observed.height - target.height) < FrameTolerance.frameWrite))
+}
+
 enum AXFrameWriteOrder {
     case sizeThenPosition
     case positionThenSize
