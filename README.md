@@ -23,7 +23,30 @@ AeroFlow is a performance-focused fork of [OmniWM](https://github.com/OmniNull/O
 
 ## Installation
 
-### From source (recommended)
+### Homebrew (recommended)
+
+```sh
+brew install frostymur/homebrew-aerofi/aeroflow
+brew services start aeroflow
+```
+
+The formula builds from source (needs Xcode Command Line Tools) and
+installs the `AeroFlow` daemon plus the `aeroflowctl` CLI into your
+PATH. `brew upgrade aeroflow` updates it.
+
+### From a GitHub release
+
+Releases are ad-hoc signed (no Apple Developer ID). Install with the
+helper script, which downloads the latest release, places the app in
+`~/Applications` and removes the quarantine flag:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/frostymur/OmniWM/main/install.sh | bash
+```
+
+If you download the `.zip` yourself: `xattr -cr "/Applications/AeroFlow.app"` before first launch.
+
+### From source
 
 ```sh
 git clone https://github.com/frostymur/OmniWM.git aero-flow
@@ -32,17 +55,11 @@ cd aero-flow
 open dist/AeroFlow.app
 ```
 
-On first launch macOS will show system dialogs for Accessibility and Input Monitoring. Grant both; the app keeps waiting (in the background) until they are granted, then starts tiling.
+On first launch the app shows an onboarding window asking for
+Accessibility access; it starts tiling as soon as it is granted.
 
-### From a GitHub release
-
-Releases are ad-hoc signed (no Apple Developer ID). Install with the helper script, which downloads the latest release, places the app in `~/Applications` and removes the quarantine flag:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/frostymur/OmniWM/main/install.sh | bash
-```
-
-If you download the `.zip` yourself: `xattr -cr "/Applications/AeroFlow.app"` before first launch.
+Install one of the three, not several — only one AeroFlow can run at a
+time (the launch conflict gate waits for the other to exit).
 
 ### Permissions after updates
 

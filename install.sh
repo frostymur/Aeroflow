@@ -39,7 +39,11 @@ fi
 
 mkdir -p "$DEST_DIR"
 echo "==> Installing to ${DEST_DIR}/${APP_NAME}"
-pkill -x AeroFlow 2>/dev/null || true
+# Only stop an AeroFlow launched from this install destination, never
+# another build (e.g. "AeroFlow Dev.app") the user may be running.
+for pid in $(pgrep -f "${DEST_DIR}/${APP_NAME}/Contents/MacOS/AeroFlow" 2>/dev/null || true); do
+  kill "$pid" 2>/dev/null || true
+done
 sleep 1
 rm -rf "${DEST_DIR:?}/${APP_NAME}"
 cp -R "$APP_SRC" "$DEST_DIR/$APP_NAME"
