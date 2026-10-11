@@ -26,7 +26,7 @@ AeroFlow is a performance-focused fork of [OmniWM](https://github.com/OmniNull/O
 ### Homebrew (recommended)
 
 ```sh
-brew install frostymur/homebrew-aerofi/aeroflow
+brew install frostymur/aerofi/aeroflow
 brew services start aeroflow
 ```
 
