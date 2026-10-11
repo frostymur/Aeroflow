@@ -166,7 +166,7 @@ final class NiriResizeViewportTests: XCTestCase {
             state: &fixture.state
         )
 
-        let grownSpan = (fixture.workingFrame.width - fixture.gap) * 0.6 - fixture.gap
+        let grownSpan = fixture.fullSpan * 0.6
         XCTAssertEqual(trailing.settledWidth, grownSpan, accuracy: 0.001)
         let offsetAfterResize = fixture.state.viewOffset
 
@@ -238,7 +238,7 @@ final class NiriResizeViewportTests: XCTestCase {
             state: &fixture.state
         )
 
-        XCTAssertEqual(trailing.settledWidth, fixture.columnSpan, accuracy: 0.001)
+        XCTAssertEqual(trailing.settledWidth, fixture.fullSpan * 0.5, accuracy: 0.001)
         XCTAssertEqual(trailing.cachedWidth, fixture.fullSpan, accuracy: 0.001)
         // The post-refactor toggle path right-aligns at a slightly different
         // offset than the column-removal clamp (which testViewportClamp... pins
