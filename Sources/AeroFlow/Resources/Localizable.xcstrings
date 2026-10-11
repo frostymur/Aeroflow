@@ -215,6 +215,16 @@
         }
       }
     },
+    "AeroFlow is starting. This window closes automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AeroFlow is starting. This window closes automatically."
+          }
+        }
+      }
+    },
     "AeroFlow keyboard shortcuts are disabled while a password field or secure text entry is active.": {
       "localizations": {
         "ja": {
@@ -355,6 +365,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "AeroFlow left %@ untouched and blocked configuration writes: %@ The exact original bytes are at %@."
+          }
+        }
+      }
+    },
+    "AeroFlow moves, resizes, and switches your windows through the macOS Accessibility API. Turn AeroFlow on in the Accessibility settings — it starts automatically, no restart needed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AeroFlow moves, resizes, and switches your windows through the macOS Accessibility API. Turn AeroFlow on in the Accessibility settings — it starts automatically, no restart needed."
           }
         }
       }
@@ -2919,6 +2939,16 @@
         }
       }
     },
+    "Later": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        }
+      }
+    },
     "Main": {
       "localizations": {
         "ja": {
@@ -3788,6 +3818,16 @@
         }
       }
     },
+    "Open Accessibility Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Accessibility Settings"
+          }
+        }
+      }
+    },
     "Open System Settings → Privacy & Security → Accessibility and enable AeroFlow.": {
       "localizations": {
         "ja": {
@@ -4156,6 +4196,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "PDF 文件"
+          }
+        }
+      }
+    },
+    "Permission granted": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permission granted"
           }
         }
       }

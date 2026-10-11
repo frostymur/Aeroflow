@@ -20,8 +20,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || inputs.pr_number || github.ref }}
   cancel-in-progress: true
 
-env:
-  DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
+# No global DEVELOPER_DIR: each runner uses its default Xcode —
+# macos-15 (Sequoia) -> Xcode 16.x, xcode-27 (Tahoe) -> Xcode 27.
 
 jobs:
   cache-dependencies:
@@ -44,7 +44,13 @@ jobs:
         run: ./Scripts/dev-tools.sh setup
   verify:
     name: Verify
-    runs-on: xcode-27
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Deployment target is macOS 15 (Sequoia); the app must build and
+        # pass checks on both Sequoia and Tahoe.
+        os: [macos-15, xcode-27]
     timeout-minutes: 60
     steps:
       - name: Validate requested pull request
@@ -75,7 +81,11 @@ jobs:
         run: make verify
   tests:
     name: Tests
-    runs-on: xcode-27
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, xcode-27]
     timeout-minutes: 60
     steps:
       - name: Validate requested pull request

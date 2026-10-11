@@ -17,7 +17,7 @@ AeroFlow is a performance-focused fork of [OmniWM](https://github.com/OmniNull/O
 
 ## Requirements
 
-- Apple Silicon, macOS 15 or later
+- Apple Silicon, macOS 15 (Sequoia) or later — tested on Sequoia and Tahoe (macOS 26)
 - **Accessibility** and **Input Monitoring** permissions
 - System Settings → Desktop & Dock → Mission Control → **Displays have separate Spaces: ON**
 
