@@ -111,7 +111,12 @@ final class AppAXFrameDelivery {
         completion: @escaping AppAXFrameMailbox.Completion
     ) -> AppAXFrameMailbox.Outcome {
         parkFrameMailbox.enqueue(
-            makeFrameWriteRequests(frames, generations: parkFrameWriteGenerations, forceVerification: true, clampTolerant: true),
+            makeFrameWriteRequests(
+                frames,
+                generations: parkFrameWriteGenerations,
+                forceVerification: true,
+                clampTolerant: true
+            ),
             callbackGeneration: callbackGeneration,
             completion: completion
         )

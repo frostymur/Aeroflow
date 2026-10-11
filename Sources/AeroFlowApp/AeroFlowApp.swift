@@ -12,7 +12,10 @@ enum AeroFlowApp {
         let bootstrap = AppBootstrapState()
         AppDelegate.sharedBootstrap = bootstrap
         let app = NSApplication.shared
-        app.delegate = AppDelegate()
+        // Strong local: NSApplication.delegate does not retain its value,
+        // so the delegate must outlive app.run().
+        let delegate = AppDelegate()
+        app.delegate = delegate
         app.run()
     }
 }

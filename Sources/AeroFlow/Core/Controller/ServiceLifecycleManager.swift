@@ -117,7 +117,7 @@ final class ServiceLifecycleManager {
         controller.reconcileEnabledAndHotkeysState()
         controller.eventIntake.open(sink: controller.eventInterpreter)
         controller.layoutRefreshController.setup()
-        controller.axManager.onAppLaunched = { [weak controller] app in
+        controller.axManager.onAppLaunched = { app in
             EventIntake.post(.application(.launched(pid: app.processIdentifier)))
         }
         controller.axManager.installWorkspaceObservers()
@@ -126,8 +126,6 @@ final class ServiceLifecycleManager {
             liveApplicationPIDs: Set(runningApplications.lazy.map(\.processIdentifier))
         )
         controller.axEventHandler.setup()
-        for app in runningApplications {
-        }
         connectAXFrameCallbacks(controller)
         workspaceObservation.setupWorkspaceObservation()
         controller.mouseEventHandler.setup()

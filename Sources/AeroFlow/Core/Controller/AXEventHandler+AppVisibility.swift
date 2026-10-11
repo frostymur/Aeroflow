@@ -25,8 +25,6 @@ extension AXEventHandler {
         let entries = controller.workspaceManager.entries(forPid: pid)
         let affectedWorkspaceIds = Set(entries.map(\.workspaceId))
         controller.dwindleLayoutHandler.groupReveals.cancelPendingGroupReveals(pid: pid)
-        for entry in entries {
-        }
         controller.mouseEventHandler.handleAppVisibilityChanged()
         for workspaceId in affectedWorkspaceIds {
             controller.layoutRefreshController.cancelActiveAnimations(for: workspaceId)

@@ -25,7 +25,7 @@ extension DwindleLayoutHandler {
             engine: engine,
             workspaceId: snapshot.workspaceId
         )
-        let removedTokens = engine.syncWindows(
+        _ = engine.syncWindows(
             windowTokens,
             in: snapshot.workspaceId,
             focusedToken: snapshot.preferredFocusToken,

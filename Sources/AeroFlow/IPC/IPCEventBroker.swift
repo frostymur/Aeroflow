@@ -83,8 +83,8 @@ final class IPCEventContinuationTable: @unchecked Sendable {
 }
 
 actor IPCEventBroker {
-    nonisolated private let continuationTable = IPCEventContinuationTable()
-    nonisolated private let demandTracker: IPCEventDemandTracker
+    private nonisolated let continuationTable = IPCEventContinuationTable()
+    private nonisolated let demandTracker: IPCEventDemandTracker
 
     init(demandTracker: IPCEventDemandTracker = IPCEventDemandTracker()) {
         self.demandTracker = demandTracker

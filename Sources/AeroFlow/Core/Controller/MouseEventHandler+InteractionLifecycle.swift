@@ -182,7 +182,6 @@ extension MouseEventHandler {
     }
 
     func handleMouseUpFromTap(at location: CGPoint, button: MouseButton) {
-        guard let controller else { return }
         if state.isMoving {
             guard shouldAcceptInteractionButton(button) else { return }
             completeActiveMove(at: location)

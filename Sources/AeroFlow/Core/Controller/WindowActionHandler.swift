@@ -89,7 +89,6 @@ final class WindowActionHandler {
         handle: WindowHandle,
         focusOrigin: ManagedFocusOrigin = .keyboardOrProgrammatic
     ) -> Bool {
-        guard let controller else { return false }
         return appReveal.requestIfNeeded(handle: handle, destination: .window, focusOrigin: focusOrigin)
     }
 

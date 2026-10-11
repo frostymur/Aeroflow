@@ -129,7 +129,6 @@ extension WMController {
         origin: ManagedFocusOrigin,
         defersRetryRaise: Bool
     ) -> ManagedFocusRequest {
-        let previousRequestId = intentLedger.activeManagedRequest?.requestId
         let request = intentLedger.beginManagedRequest(
             token: entry.token,
             workspaceId: entry.workspaceId,
@@ -137,8 +136,6 @@ extension WMController {
         )
         if defersRetryRaise {
             intentLedger.enableDeferredRetryRaise(for: request)
-        }
-        if let previousRequestId {
         }
         _ = workspaceManager.beginManagedFocusRequest(
             request.token,

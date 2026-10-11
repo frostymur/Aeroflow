@@ -6,10 +6,10 @@ import AeroFlowIPC
 import Foundation
 
 actor IPCApplicationBridge {
-    nonisolated private let controller: WMController
-    nonisolated private let appVersion: String?
-    nonisolated private let eventBroker: IPCEventBroker
-    nonisolated private let sessionToken: String
+    private nonisolated let controller: WMController
+    private nonisolated let appVersion: String?
+    private nonisolated let eventBroker: IPCEventBroker
+    private nonisolated let sessionToken: String
     private let authorizationToken: String
     private var lastPublishedDisplays: IPCResult?
 

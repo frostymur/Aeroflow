@@ -117,7 +117,7 @@ enum SettingsTOMLMigration {
             "consumeOrExpelWindowRight": ["consumeWindowIntoColumn", "expelWindowFromColumn"]
         ]
         let explicitCurrentIDs = Set(entries.compactMap(hotkeyID))
-        var migrated = migrateLegacyHotkeyEntries(
+        let migrated = migrateLegacyHotkeyEntries(
             entries,
             explicitCurrentIDs: explicitCurrentIDs,
             mappings: mappings,
