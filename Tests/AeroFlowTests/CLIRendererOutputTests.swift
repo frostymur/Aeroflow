@@ -23,7 +23,7 @@ final class CLIRendererOutputTests: XCTestCase {
                 windows: IPCWindowsQueryResult(
                     windows: titles.enumerated().map { index, title in
                         IPCWindowQuerySnapshot(
-                            id: "w-\(index)", workspace: workspace, windowId: windowId, title: title
+                            id: "w-\(index)", windowId: windowId, workspace: workspace, title: title
                         )
                     }
                 )
