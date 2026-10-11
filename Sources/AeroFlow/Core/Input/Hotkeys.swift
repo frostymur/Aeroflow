@@ -57,24 +57,13 @@ final class HotkeyCenter {
     }
 
     deinit {
-        // deinit runs on the thread releasing the last reference; the
-        // HyperTrigger event tap must be torn down on the main run loop.
-        // Capture the CF values (self is being deallocated) and teardown inline
-        // when already on main, otherwise schedule it on the main queue.
-        let tap = hyperTriggerTap
-        let source = hyperTriggerRunLoopSource
-        guard tap != nil || source != nil else { return }
-        let teardown = {
-            if let source {
-                CFRunLoopRemoveSource(CFRunLoopGetMain(), source, CFRunLoopMode.commonModes)
-            }
-            if let tap { CFMachPortInvalidate(tap) }
-        }
-        if Thread.isMainThread {
-            teardown()
-        } else {
-            DispatchQueue.main.async(execute: teardown)
-        }
+        // Tear down the HyperTrigger tap synchronously. CFMachPortInvalidate is
+        // thread-safe and the run-loop source removal is tracked by teardown
+        // observers, so this is safe from the deinit thread (which may be off
+        // main). Matches the original synchronous teardown behavior.
+        var tap = hyperTriggerTap
+        var source = hyperTriggerRunLoopSource
+        EventTapTeardown.tearDown(tap: &tap, runLoopSource: &source)
     }
 
     func handleCarbonHotkey(id: UInt32, kind: UInt32) {

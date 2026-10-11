@@ -43,7 +43,7 @@ final class TabRailIconTests: XCTestCase {
                         XCTAssertTrue(window.hoverCard.isVisible)
                         XCTAssertEqual(
                             children[item.visualIndex].accessibilityFrame(),
-                            window.convertToScreen(item.hitRect)
+                            view.convertToScreen(item.hitRect)
                         )
                     }
                 }
