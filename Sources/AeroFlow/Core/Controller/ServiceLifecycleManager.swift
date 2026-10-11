@@ -66,10 +66,12 @@ final class ServiceLifecycleManager {
 
                 if granted {
                     controller.updateAccessibilityPermissionGranted(true)
+                    PermissionOnboardingController.shared.stateChanged(granted: true)
                     self.maybeStartServices()
                 } else {
                     _ = self.controller?.axManager.requestPermission() ?? false
                     controller.updateAccessibilityPermissionGranted(false)
+                    PermissionOnboardingController.shared.stateChanged(granted: false)
                 }
             }
         }
