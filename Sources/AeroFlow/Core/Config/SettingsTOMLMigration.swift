@@ -38,6 +38,7 @@ enum SettingsTOMLMigration {
         let versionOneReport = version == 0 ? try migrateVersionZero(&raw) : nil
         let versionTwoAddedHotkeyIDs = version <= 1 ? migrateVersionOne(&raw) : []
         let versionThreeDefaultedPaths = try migrateVersionTwo(&raw)
+        dropRemovedActionHotkeys(in: &raw)
         canonicalizeMigratedHotkeys(in: &raw)
         return SettingsMigrationReport(
             fromVersion: version,
@@ -218,6 +219,19 @@ enum SettingsTOMLMigration {
             addedIDs.append(id)
         }
         return addedIDs
+    }
+
+    /// Drop hotkeys whose action no longer exists (features removed in a
+    /// later release, e.g. scratchpads). A fresh config can't reference a
+    /// removed action, but an older config can — dropping it here keeps the
+    /// migration from failing in `HotkeyBinding.resolve`.
+    private static func dropRemovedActionHotkeys(in raw: inout [String: TOMLNode]) {
+        guard case let .array(entries) = raw["hotkeys"] else { return }
+        let valid = HotkeyBindingRegistry.validActionIDs
+        raw["hotkeys"] = .array(entries.filter { entry in
+            guard let id = hotkeyID(entry) else { return true }
+            return valid.contains(id)
+        })
     }
 
     private static func canonicalizeMigratedHotkeys(in raw: inout [String: TOMLNode]) {

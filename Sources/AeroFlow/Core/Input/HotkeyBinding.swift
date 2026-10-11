@@ -396,6 +396,7 @@ enum HotkeyBindingRegistry {
         defaultBindings.map { ($0.id, $0) },
         uniquingKeysWith: { first, _ in first }
     )
+    static let validActionIDs: Set<String> = Set(bindingsByID.keys)
 
     static func defaults() -> [HotkeyBinding] {
         defaultBindings
