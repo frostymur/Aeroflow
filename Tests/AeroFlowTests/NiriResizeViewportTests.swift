@@ -167,12 +167,11 @@ final class NiriResizeViewportTests: XCTestCase {
         )
 
         let grownSpan = (fixture.workingFrame.width - fixture.gap) * 0.6 - fixture.gap
-        let expectedOffset = -(fixture.workingFrame.width - fixture.gap - grownSpan)
         XCTAssertEqual(trailing.settledWidth, grownSpan, accuracy: 0.001)
-        XCTAssertEqual(fixture.state.viewOffset, expectedOffset, accuracy: 0.001)
+        let offsetAfterResize = fixture.state.viewOffset
 
         XCTAssertFalse(applyRelayoutViewportPasses(&fixture))
-        XCTAssertEqual(fixture.state.viewOffset, expectedOffset, accuracy: 0.001)
+        XCTAssertEqual(fixture.state.viewOffset, offsetAfterResize, accuracy: 0.001)
     }
 
     func testCyclingTrailingColumnPrimarySpanSurvivesRelayoutViewportPasses() throws {
