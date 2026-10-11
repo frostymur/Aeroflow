@@ -40,3 +40,5 @@ Frameworks/
 
 # Local documentation
 STABILITY_IMPROVEMENTS.md
+.build-xcode164
+.build-xcode164-inc
