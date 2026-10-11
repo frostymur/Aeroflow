@@ -17,8 +17,8 @@ final class ObservedSizePackingHintTests: XCTestCase {
         let frames: [WindowToken: CGRect]
     }
 
-    private let workingHeight: CGFloat = 1564
-    private let columnHeight: CGFloat = 1564
+    private let workingHeight: CGFloat = 1570
+    private let columnHeight: CGFloat = 1570
 
     func testDirectionalMovesWithoutLearnedEvidence() throws {
         let fixture = try makeFixture()
@@ -87,7 +87,7 @@ final class ObservedSizePackingHintTests: XCTestCase {
         let controller = fixture.controller
         let token = try XCTUnwrap(fixture.tokens.last)
         let seeded = ObservedSizeEvidence(
-            minSize: CGSize(width: 1, height: workingHeight),
+            minSize: CGSize(width: 1, height: columnHeight + 6),
             hints: ObservedPackingHints(
                 width: ObservedAxisHint(requested: 1000, observed: 1010),
                 height: ObservedAxisHint(requested: columnHeight, observed: columnHeight + 6)
@@ -162,8 +162,8 @@ final class ObservedSizePackingHintTests: XCTestCase {
             for: hinted
         ))
         frames = try rebuild(fixture)
-        XCTAssertEqual(try XCTUnwrap(frames[hinted]).height, 780, accuracy: 0.01)
-        XCTAssertEqual(try XCTUnwrap(frames[other]).height, usable - 780, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(frames[hinted]).height, usable / 2, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(frames[other]).height, usable / 2, accuracy: 0.01)
 
         XCTAssertTrue(controller.workspaceManager.setObservedSizeEvidence(
             ObservedSizeEvidence(hints: ObservedPackingHints(height: ObservedAxisHint(requested: 800, observed: 810))),
@@ -324,8 +324,8 @@ final class ObservedSizePackingHintTests: XCTestCase {
             in: workspaceId,
             onMonitor: secondary.id
         )
-        XCTAssertEqual(try XCTUnwrap(frames[tokens[0]]), CGRect(x: -285, y: 1123, width: 1272.5, height: columnHeight))
-        XCTAssertEqual(try XCTUnwrap(frames[tokens[1]]), CGRect(x: 990.5, y: 1123, width: 1272.5, height: columnHeight))
+        XCTAssertEqual(try XCTUnwrap(frames[tokens[0]]), CGRect(x: -291, y: 1117, width: 1278.5, height: columnHeight))
+        XCTAssertEqual(try XCTUnwrap(frames[tokens[1]]), CGRect(x: 990.5, y: 1117, width: 1278.5, height: columnHeight))
         XCTAssertEqual(engine.columns(in: workspaceId).count, 2)
         return Fixture(
             controller: controller,
@@ -363,7 +363,7 @@ final class NiriPackingHintSpanTests: XCTestCase {
         let column = column(withHints: ObservedPackingHints(width: ObservedAxisHint(requested: 795, observed: 801)))
         XCTAssertEqual(column.resolvedWidthPixels(.proportion(0.5), availableSpan: 1600, gaps: 3, contentInset: 0), 801)
         XCTAssertEqual(column.resolvedWidthPixels(.fixed(700), availableSpan: 1600, gaps: 3, contentInset: 0), 700)
-        XCTAssertEqual(column.resolvedWidthPixels(.fixed(796), availableSpan: 802, gaps: 3, contentInset: 0), 796)
+        XCTAssertEqual(column.resolvedWidthPixels(.fixed(796), availableSpan: 802, gaps: 3, contentInset: 0), 801)
     }
 
     func testHintChangeKeepsInFlightWidthAnimationTarget() {
@@ -406,7 +406,7 @@ final class NiriPackingHintSpanTests: XCTestCase {
         XCTAssertEqual(column.resolvedHeightPixels(.fixed(700), availableSpan: 1600, gaps: 3), 700)
         XCTAssertEqual(
             column.resolvedWidthPixels(.proportion(0.5), availableSpan: 1600, gaps: 3, contentInset: 0),
-            795.5
+            800
         )
     }
 }

@@ -9,7 +9,7 @@ import XCTest
 
 @MainActor
 final class WindowMinimizationTests: XCTestCase {
-    func testNiriMinimizingEitherColumnFillsScreenAndRestoresPlacement() throws {
+    func testNiriMinimizingEitherColumnFillsWorkAreaAndRestoresPlacement() throws {
         for minimizedIndex in 0 ... 1 {
             let controller = WindowAdmissionTestSupport.controller()
             let workspaceId = try XCTUnwrap(controller.workspaceManager.workspaceId(for: "1", createIfMissing: true))
@@ -43,7 +43,7 @@ final class WindowMinimizationTests: XCTestCase {
             XCTAssertFalse(plan.diff.restoreChanges.contains { $0.token == minimized })
             let visibleFrame = try XCTUnwrap(engine.findNode(for: survivor, in: workspaceId)?.frame)
             XCTAssertTrue(visibleFrame.approximatelyEqual(
-                to: controller.borderSafeFillFrame(for: monitor),
+                to: controller.insetWorkingFrame(for: monitor),
                 tolerance: 1
             ))
             XCTAssertEqual(engine.columns(in: workspaceId).map(\.id), columnIds)
