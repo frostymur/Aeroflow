@@ -11,14 +11,20 @@ final class CLIRendererOutputTests: XCTestCase {
         windowResponse(titles: [title])
     }
 
-    private func windowResponse(titles: [String], workspace: IPCWorkspaceRef? = nil) -> IPCResponse {
+    private func windowResponse(
+        titles: [String],
+        workspace: IPCWorkspaceRef? = nil,
+        windowId: Int? = nil
+    ) -> IPCResponse {
         return IPCResponse.success(
             id: "1",
             kind: .query,
             result: IPCResult(
                 windows: IPCWindowsQueryResult(
                     windows: titles.enumerated().map { index, title in
-                        IPCWindowQuerySnapshot(id: "w-\(index)", workspace: workspace, title: title)
+                        IPCWindowQuerySnapshot(
+                            id: "w-\(index)", workspace: workspace, windowId: windowId, title: title
+                        )
                     }
                 )
             )
@@ -26,7 +32,7 @@ final class CLIRendererOutputTests: XCTestCase {
     }
 
     func testTSVEscapesNewlineAndTabInWindowTitle() throws {
-        let response = windowResponse(title: "Progress\tbar\r\nsecond")
+        let response = windowResponse(titles: ["Progress\tbar\r\nsecond"], windowId: 1)
         let output = try CLIRenderer.responseOutput(response, format: .tsv)
         let text = try XCTUnwrap(String(data: output.data, encoding: .utf8))
         let body = text.trimmingCharacters(in: .newlines)
