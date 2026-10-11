@@ -57,10 +57,24 @@ final class HotkeyCenter {
     }
 
     deinit {
-//        carbonRegistrations.unregister()
-//        stopHyperTriggerTap()
-//        restoreCapsLockHyperRemap()
-//        carbonRegistrations.removeEventHandler()
+        // deinit runs on the thread releasing the last reference; the
+        // HyperTrigger event tap must be torn down on the main run loop.
+        // Capture the CF values (self is being deallocated) and teardown inline
+        // when already on main, otherwise schedule it on the main queue.
+        let tap = hyperTriggerTap
+        let source = hyperTriggerRunLoopSource
+        guard tap != nil || source != nil else { return }
+        let teardown = {
+            if let source {
+                CFRunLoopRemoveSource(CFRunLoopGetMain(), source, CFRunLoopMode.commonModes)
+            }
+            if let tap { CFMachPortInvalidate(tap) }
+        }
+        if Thread.isMainThread {
+            teardown()
+        } else {
+            DispatchQueue.main.async(execute: teardown)
+        }
     }
 
     func handleCarbonHotkey(id: UInt32, kind: UInt32) {
