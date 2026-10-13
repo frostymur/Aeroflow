@@ -78,24 +78,37 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             finishBootstrap()
             return
         }
-        let options = ["kAXTrustedCheckOptionPrompt": true] as CFDictionary
+        // Headless app: the onboarding window is the single permission UI —
+        // no native system dialog on top of it (that was the redundant
+        // second window). prompt:false still records the request in tccd, so
+        // the app appears in the Accessibility list the window deep-links to.
+        PermissionOnboardingController.shared.stateChanged(granted: false)
+        // NSDictionary literal form (as in AXManager+Applications): the
+        // `as CFDictionary` cast on a [String: Bool] literal crashed inside
+        // AXIsProcessTrustedWithOptions on first ungranted launch (SIGSEGV in
+        // CFGetTypeID) and killed the app before any prompt could appear.
+        let options: NSDictionary = [axTrustedCheckOptionPrompt as NSString: false]
         _ = AXIsProcessTrustedWithOptions(options)
-        HotkeyCenter.requestInputMonitoringAccess()
         appLogger
             .notice(
-                "Accessibility/Input Monitoring not granted yet; AeroFlow starts once permissions are granted (System Settings → Privacy & Security)."
+                "Accessibility not granted yet; AeroFlow starts once it is granted (onboarding window, or System Settings → Privacy & Security)."
             )
         permissionPollTask = Task { @MainActor [weak self] in
             while !Task.isCancelled, !Self.requiredPermissionsGranted() {
                 try? await Task.sleep(for: .seconds(1))
             }
             guard !Task.isCancelled else { return }
+            PermissionOnboardingController.shared.stateChanged(granted: true)
             self?.finishBootstrap()
         }
     }
 
     private static func requiredPermissionsGranted() -> Bool {
-        AXIsProcessTrusted() && HotkeyCenter.inputMonitoringAccessGranted()
+        // Accessibility is the only required TCC permission (all window
+        // operations are AX). Input Monitoring is requested later, when
+        // side-specific hotkeys actually need it (HotkeyCenter) — gating the
+        // whole WM on it left users stuck after granting Accessibility.
+        AXIsProcessTrusted()
     }
 
     func finishBootstrap() {

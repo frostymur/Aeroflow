@@ -154,6 +154,14 @@ final class HotkeyCenter {
         let plan = Self.registrationPlan(for: configuration.bindings)
         registrationFailures = plan.failures
 
+        // Side-specific hotkeys need an Input Monitoring event tap. Request
+        // it here — when those hotkeys are actually being registered — not
+        // at launch, where it was a redundant second prompt before
+        // Accessibility was even granted.
+        if !plan.sideSpecificRegistrations.isEmpty, !Self.inputMonitoringAccessGranted() {
+            Self.requestInputMonitoringAccess()
+        }
+
         guard !commandHotkeysSuspended else {
             sideSpecificDispatch = []
             reconcileEventTap()
