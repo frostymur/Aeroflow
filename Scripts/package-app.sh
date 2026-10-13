@@ -55,6 +55,12 @@ if command -v plutil >/dev/null 2>&1; then
   plutil -lint "$APP_DIR/Contents/Info.plist" >/dev/null
 fi
 
+# Strip extended attributes (e.g. com.apple.provenance) so the release zip
+# carries no AppleDouble ._* companions; those break the app's code-seal
+# verification after install. The code signature lives in the Mach-O, not in
+# xattrs, so this is safe to do before signing.
+xattr -cr "$APP_DIR"
+
 if [ "$SIGN_AND_NOTARIZE" = "true" ]; then
   echo "Signing $APP_DIR with hardened runtime..."
   codesign --force --options runtime --sign "$SIGNING_IDENTITY" --timestamp "$APP_DIR/Contents/MacOS/aeroflowctl"
