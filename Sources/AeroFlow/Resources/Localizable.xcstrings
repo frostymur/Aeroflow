@@ -6998,6 +6998,16 @@
         }
       }
     },
+    "Updated recently and the toggle is already on? Turn it off and on again, or run brew services restart aeroflow.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Updated recently and the toggle is already on? Turn it off and on again, or run brew services restart aeroflow."
+          }
+        }
+      }
+    },
     "Verify the upgraded settings, then keep the backup or delete %@ to dismiss this notice.": {
       "localizations": {
         "en": {

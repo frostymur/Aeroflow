@@ -91,7 +91,7 @@ final class PermissionOnboardingController: NSObject, NSWindowDelegate {
             )
         )
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 332),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -158,6 +158,15 @@ private struct PermissionOnboardingView: View {
             .font(.callout)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
+
+            if model.status == .waiting {
+                Text(
+                    "Updated recently and the toggle is already on? Turn it off and on again, or run brew services restart aeroflow."
+                )
+                .font(.footnote)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+            }
 
             if model.status == .waiting {
                 HStack(spacing: 10) {
