@@ -133,7 +133,7 @@ final class TabRailView: NSView {
             return
         }
         for (element, item) in zip(accessibilityTabElements, items) {
-            element.updateScreenFrame(screenFrame(for: item.hitRect))
+            element.updateScreenFrame(item.hitRect, screenFrame: screenFrame(for: item.hitRect))
         }
         NSAccessibility.post(element: self, notification: .layoutChanged)
     }
@@ -306,12 +306,13 @@ extension TabRailView {
             }
             let screenFrame = screenFrame(for: item.hitRect)
             if let element = existingElements[item.visualIndex] {
-                element.update(tab: tab, screenFrame: screenFrame)
+                element.update(tab: tab, hitRectInView: item.hitRect, screenFrame: screenFrame)
                 return element
             }
             let element = TabRailAccessibilityElement(
                 parent: self,
                 tab: tab,
+                hitRectInView: item.hitRect,
                 screenFrame: screenFrame,
                 pressAction: { [weak self] visualIndex in
                     _ = self?.performAccessibilitySelection(visualIndex)
@@ -342,6 +343,10 @@ extension TabRailView {
         guard let window, !rect.isEmpty else { return .zero }
         let windowRect = convert(rect, to: nil)
         return window.convertToScreen(windowRect)
+    }
+
+    func screenFrameForAccessibility(for rect: CGRect) -> NSRect {
+        screenFrame(for: rect)
     }
 
     private static func hasSameAccessibilityMetadata(

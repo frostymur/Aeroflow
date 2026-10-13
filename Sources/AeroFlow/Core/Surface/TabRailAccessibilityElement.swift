@@ -6,7 +6,9 @@ import AppKit
 
 final class TabRailAccessibilityElement: NSAccessibilityElement {
     private weak var parentElement: AnyObject?
+    private weak var ownerView: TabRailView?
     private var tab: TabRailTabInfo
+    private var hitRectInView: CGRect
     private var screenFrame: CGRect
     private let pressAction: (Int) -> Void
     private let revealAction: (Int) -> Void
@@ -19,12 +21,15 @@ final class TabRailAccessibilityElement: NSAccessibilityElement {
     init(
         parent: AnyObject,
         tab: TabRailTabInfo,
+        hitRectInView: CGRect,
         screenFrame: CGRect,
         pressAction: @escaping (Int) -> Void,
         revealAction: @escaping (Int) -> Void = { _ in }
     ) {
         parentElement = parent
+        ownerView = parent as? TabRailView
         self.tab = tab
+        self.hitRectInView = hitRectInView
         self.screenFrame = screenFrame
         self.pressAction = pressAction
         self.revealAction = revealAction
@@ -53,7 +58,18 @@ final class TabRailAccessibilityElement: NSAccessibilityElement {
     }
 
     override func accessibilityFrame() -> NSRect {
-        screenFrame
+        // Report the icon's live on-screen position: the rail window can be
+        // repositioned after the frame was last cached (window-server
+        // settling), and assistive clients must target where the icon is now.
+        // Accessibility queries arrive on the main thread; fall back to the
+        // cached frame for the off-main edge case.
+        guard let view = ownerView, !hitRectInView.isEmpty, Thread.isMainThread else {
+            return screenFrame
+        }
+        let rect = hitRectInView
+        return MainActor.assumeIsolated {
+            view.screenFrameForAccessibility(for: rect)
+        }
     }
 
     override func isAccessibilityEnabled() -> Bool {
@@ -70,12 +86,14 @@ final class TabRailAccessibilityElement: NSAccessibilityElement {
         super.setAccessibilityFocused(focused)
     }
 
-    func update(tab: TabRailTabInfo, screenFrame: CGRect) {
+    func update(tab: TabRailTabInfo, hitRectInView: CGRect, screenFrame: CGRect) {
         self.tab = tab
+        self.hitRectInView = hitRectInView
         self.screenFrame = screenFrame
     }
 
-    func updateScreenFrame(_ screenFrame: CGRect) {
+    func updateScreenFrame(_ hitRectInView: CGRect, screenFrame: CGRect) {
+        self.hitRectInView = hitRectInView
         self.screenFrame = screenFrame
     }
 
