@@ -9,7 +9,21 @@ import IOKit.hidsystem
 
 @MainActor
 final class HotkeyCenter {
-    var onCommand: ((HotkeyInvocation) -> Void)?
+    /// The command closure holds MainActor state and may only be released on
+    /// the main thread, so it is stored in a Sendable box: the nonisolated
+    /// deinit can then hand the box's final release to the main run loop when
+    /// the center is deallocated off-main. All access is main-thread (the
+    /// MainActor class and the main run loop), so the box is safe to share.
+    private let commandBox = CommandClosureBox()
+
+    var onCommand: ((HotkeyInvocation) -> Void)? {
+        get { commandBox.closure }
+        set { commandBox.closure = newValue }
+    }
+
+    private final class CommandClosureBox: @unchecked Sendable {
+        var closure: ((HotkeyInvocation) -> Void)?
+    }
 
     private let carbonRegistrations = CarbonHotkeyRegistration()
     private var isRunning = false
@@ -64,6 +78,19 @@ final class HotkeyCenter {
         var tap = hyperTriggerTap
         var source = hyperTriggerRunLoopSource
         EventTapTeardown.tearDown(tap: &tap, runLoopSource: &source)
+
+        // The command closure holds MainActor state and may only be released
+        // on the main thread. If the final release of the center lands on
+        // main (the common path), the box goes away with self here. If it
+        // lands off main, hand the box to the main run loop so the closure
+        // inside is released on the main thread.
+        let box = commandBox
+        if !Thread.isMainThread {
+            CFRunLoopPerformBlock(CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) {
+                box.closure = nil
+            }
+            CFRunLoopWakeUp(CFRunLoopGetMain())
+        }
     }
 
     func handleCarbonHotkey(id: UInt32, kind: UInt32) {
