@@ -41,15 +41,10 @@ final class TabRailIconTests: XCTestCase {
                         XCTAssertEqual(selected, item.visualIndex)
                         view.mouseMoved(with: try event(.mouseMoved, at: center, in: window))
                         XCTAssertTrue(window.hoverCard.isVisible)
-                        let a11yFrame = children[item.visualIndex].accessibilityFrame()
-                        let liveFrame = window.convertToScreen(view.convert(item.hitRect, to: nil))
-                        if a11yFrame != liveFrame {
-                            FileHandle.standardError.write(
-                                "TabRail a11y-diag count=\(count) active=\(active) scale=\(scale) idx=\(item.visualIndex) hitRect=\(item.hitRect) window.frame=\(window.frame) a11y=\(a11yFrame) live=\(liveFrame)\n"
-                                    .data(using: .utf8)!
-                            )
-                        }
-                        XCTAssertEqual(a11yFrame, liveFrame)
+                        XCTAssertEqual(
+                            children[item.visualIndex].accessibilityFrame(),
+                            window.convertToScreen(view.convert(item.hitRect, to: nil))
+                        )
                     }
                 }
             }
