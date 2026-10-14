@@ -108,6 +108,21 @@ extension NiriLayoutEngine {
         return max(1, workingFrame.width - contentInset)
     }
 
+    /// A lone window that is resized up to the top of the available span should
+    /// return to true auto sizing (which tracks the full span) rather than being
+    /// pinned just short of it. Manual resize otherwise pins a fixed size, which
+    /// is capped at `span - 2*gaps` — so without this, growing can never restore
+    /// the full height/width the window had before it was shrunk.
+    private func loneWindowReachedFullSpan(
+        projectedWindows: [NiriWindow],
+        newPixels: CGFloat,
+        availableSpan: CGFloat,
+        gaps: CGFloat
+    ) -> Bool {
+        projectedWindows.count == 1
+            && newPixels >= availableSpan - 2 * gaps - 1
+    }
+
     private func setVerticalWindowWidth(
         _ window: NiriWindow,
         change: NiriSizeChange,
@@ -130,6 +145,19 @@ extension NiriLayoutEngine {
             availableSpan: availableWidth,
             gaps: geometry.gaps
         )
+
+        if loneWindowReachedFullSpan(
+            projectedWindows: projectedWindows,
+            newPixels: windowWidth,
+            availableSpan: availableWidth,
+            gaps: geometry.gaps
+        ) {
+            window.windowWidth = .auto(weight: 1)
+            if window.sizingMode == .maximized {
+                window.sizingMode = .normal
+            }
+            return
+        }
 
         column.applyWindowWidth(
             window,
@@ -175,6 +203,20 @@ extension NiriLayoutEngine {
             availableSpan: geometry.workingFrame.height,
             gaps: geometry.gaps
         )
+
+        if loneWindowReachedFullSpan(
+            projectedWindows: projectedWindows,
+            newPixels: windowHeight,
+            availableSpan: geometry.workingFrame.height,
+            gaps: geometry.gaps
+        ) {
+            window.height = .auto(weight: 1)
+            window.savedHeight = nil
+            if window.sizingMode == .maximized {
+                window.sizingMode = .normal
+            }
+            return
+        }
 
         column.applyWindowHeight(
             window,
