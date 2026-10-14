@@ -78,16 +78,19 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             finishBootstrap()
             return
         }
-        // Headless app: the onboarding window is the single permission UI —
-        // no native system dialog on top of it (that was the redundant
-        // second window). prompt:false still records the request in tccd, so
-        // the app appears in the Accessibility list the window deep-links to.
+        // Native system prompt (prompt:true): registers this build in the
+        // Accessibility list, so an update's re-grant is a single toggle
+        // instead of remove-old-entry + re-add + toggle. Ad-hoc builds change
+        // code hash, so the prior grant is orphaned and the new build needs a
+        // fresh entry — the native prompt creates it. The onboarding window
+        // below stays up as the persistent re-entry point if the dialog is
+        // dismissed (headless app has no menu bar).
         PermissionOnboardingController.shared.stateChanged(granted: false)
         // NSDictionary literal form (as in AXManager+Applications): the
         // `as CFDictionary` cast on a [String: Bool] literal crashed inside
         // AXIsProcessTrustedWithOptions on first ungranted launch (SIGSEGV in
         // CFGetTypeID) and killed the app before any prompt could appear.
-        let options: NSDictionary = [axTrustedCheckOptionPrompt as NSString: false]
+        let options: NSDictionary = [axTrustedCheckOptionPrompt as NSString: true]
         _ = AXIsProcessTrustedWithOptions(options)
         appLogger
             .notice(

@@ -55,9 +55,10 @@ extension AXManager {
     func requestPermission() -> Bool {
         if AccessibilityPermissionMonitor.shared.isGranted { return true }
 
-        // prompt:false: the onboarding window is the app's permission UI; a
-        // native system dialog on top of it was a redundant second window.
-        let options: NSDictionary = [axTrustedCheckOptionPrompt as NSString: false]
+        // prompt:true: re-registers this build and re-prompts when the grant is
+        // lost while running (e.g. after an update's new code hash or a manual
+        // revoke), so recovery is a single toggle.
+        let options: NSDictionary = [axTrustedCheckOptionPrompt as NSString: true]
         _ = AXIsProcessTrustedWithOptions(options)
 
         return AccessibilityPermissionMonitor.shared.isGranted
