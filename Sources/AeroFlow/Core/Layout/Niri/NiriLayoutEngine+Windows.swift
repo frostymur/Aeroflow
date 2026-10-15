@@ -55,7 +55,8 @@ extension NiriLayoutEngine {
         to workspaceId: WorkspaceDescriptor.ID,
         afterSelection selectedNodeId: NodeId?,
         focusedToken: WindowToken? = nil,
-        containerSizingState: NiriContainerSizingState? = nil
+        containerSizingState: NiriContainerSizingState? = nil,
+        sizingGeometry: NiriSizingGeometry? = nil
     ) -> NiriWindow {
         let state = ensureState(for: workspaceId)
         if let existing = state.nodesByToken[token] {
@@ -97,6 +98,14 @@ extension NiriLayoutEngine {
         newColumn.appendChild(windowNode)
 
         state.index(windowNode)
+        if let sizingGeometry {
+            rebalanceColumnsToFit(
+                in: workspaceId,
+                workingFrame: sizingGeometry.workingFrame,
+                gaps: sizingGeometry.gaps,
+                orientation: sizingGeometry.orientation
+            )
+        }
 
         return windowNode
     }
@@ -195,7 +204,8 @@ extension NiriLayoutEngine {
         in workspaceId: WorkspaceDescriptor.ID,
         selectedNodeId: NodeId?,
         focusedToken: WindowToken? = nil,
-        containerSizingStates: [WindowToken: NiriContainerSizingState]? = nil
+        containerSizingStates: [WindowToken: NiriContainerSizingState]? = nil,
+        sizingGeometry: NiriSizingGeometry? = nil
     ) -> Set<WindowToken> {
         assertSanctionedMutation()
         let state = ensureState(for: workspaceId)
@@ -215,7 +225,8 @@ extension NiriLayoutEngine {
                 to: workspaceId,
                 afterSelection: selectedNodeId,
                 focusedToken: focusedToken,
-                containerSizingState: containerSizingStates?[token]
+                containerSizingState: containerSizingStates?[token],
+                sizingGeometry: sizingGeometry
             )
         }
 

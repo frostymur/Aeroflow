@@ -14,12 +14,14 @@ class NiriInteractionTestCase: XCTestCase {
         pid: pid_t,
         windowId: Int = 1,
         to workspaceId: WorkspaceDescriptor.ID,
-        after node: NiriNode? = nil
+        after node: NiriNode? = nil,
+        sizingGeometry: NiriSizingGeometry? = nil
     ) -> NiriWindow {
         engine.addWindow(
             token: WindowToken(pid: pid, windowId: windowId),
             to: workspaceId,
-            afterSelection: node?.id
+            afterSelection: node?.id,
+            sizingGeometry: sizingGeometry
         )
     }
 

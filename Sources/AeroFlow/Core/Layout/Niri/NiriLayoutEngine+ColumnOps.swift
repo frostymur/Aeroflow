@@ -296,6 +296,124 @@ extension NiriLayoutEngine {
         return true
     }
 
+    /// New columns arrive with the default span and existing columns keep
+    /// theirs, so a workspace with more columns than the frame can hold
+    /// (default span 0.5 ⇒ 3 columns already overflow) lays out wider than
+    /// the screen and the viewport camera scrolls on focus switches. After a
+    /// column is added, scale the flexible (proportional) columns — including
+    /// the new one — so the spans fill the working frame exactly. Columns
+    /// pinned by a manual resize (`.fixed`) or marked full-span keep their
+    /// size, so intentional overflow (niri's native scroll) is preserved.
+    @discardableResult
+    func rebalanceColumnsToFit(
+        in workspaceId: WorkspaceDescriptor.ID,
+        workingFrame: CGRect,
+        gaps: CGFloat,
+        orientation: Monitor.Orientation
+    ) -> Bool {
+        let projected = projectedColumns(in: workspaceId)
+        guard projected.count > 1 else { return false }
+
+        let axisSpan = orientation == .horizontal ? workingFrame.width : workingFrame.height
+        let reservedGaps = gaps * CGFloat(projected.count - 1)
+        let available = axisSpan - reservedGaps
+        guard available > 0 else { return false }
+
+        struct Entry {
+            let column: NiriContainer
+            let committed: Bool
+            let span: CGFloat
+            let minSpan: CGFloat
+        }
+
+        var entries: [Entry] = []
+        entries.reserveCapacity(projected.count)
+        for projected in projected {
+            let column = projected.column
+            let isFull = orientation == .horizontal ? column.isFullWidth : column.isFullHeight
+            let spec = isFull
+                ? ProportionalSize.proportion(1)
+                : (orientation == .horizontal ? column.width : column.height)
+            // Committed = intentionally sized and must not be scaled: a
+            // manual resize (`.fixed`, or a manual `.proportion`/preset, which
+            // sets the per-axis override flag) or a full-span column. Fresh
+            // default columns (override flag false) are scaled to fit.
+            let manualOverride = orientation == .horizontal
+                ? column.hasManualSingleWindowWidthOverride
+                : column.hasManualSingleWindowHeightOverride
+            let isCommitted: Bool
+            switch spec {
+            case .proportion:
+                isCommitted = isFull || manualOverride
+            case .fixed:
+                isCommitted = true
+            }
+            let span: CGFloat
+            switch spec {
+            case let .proportion(proportion):
+                span = available * proportion
+            case let .fixed(size):
+                span = size
+            }
+            let minSpan = orientation == .horizontal
+                ? column.widthBounds().min
+                : column.heightBounds().min
+            entries.append(
+                Entry(
+                    column: column,
+                    committed: isCommitted,
+                    span: span,
+                    minSpan: minSpan
+                )
+            )
+        }
+
+        let committedTotal = entries.lazy.filter(\.committed).reduce(0) { $0 + $1.span }
+        guard committedTotal < available else { return false }
+        let flexible = entries.filter { !$0.committed }
+        let flexibleTotal = flexible.reduce(0) { $0 + $1.span }
+        // Only shrink to fit; never expand columns that already fit.
+        guard flexibleTotal > available - committedTotal + 0.5 else { return false }
+
+        let target = available - committedTotal
+        let scale = target / flexibleTotal
+        var spans = flexible.map { max($0.span * scale, $0.minSpan) }
+        // If content minimums kept some column from shrinking, shrink the rest
+        // a little more so the total still fits.
+        let overflow = spans.reduce(0, +) - target
+        if overflow > 0.5 {
+            let shrinkable = spans.enumerated().filter { $0.element > flexible[$0.offset].minSpan + 0.5 }
+            if !shrinkable.isEmpty {
+                let shrinkableTotal = shrinkable.reduce(0) { $0 + $1.element }
+                let scale = (shrinkableTotal - overflow) / shrinkableTotal
+                for index in shrinkable.map(\.offset) {
+                    spans[index] = max(spans[index] * scale, flexible[index].minSpan)
+                }
+            }
+        }
+        guard spans.reduce(0, +) < flexibleTotal else { return false }
+
+        for (index, entry) in flexible.enumerated() {
+            let proportion = (spans[index] / available).clamped(to: 0.01 ... 1)
+            if orientation == .horizontal {
+                entry.column.width = .proportion(proportion)
+                entry.column.cachedWidth = 0
+                entry.column.isFullWidth = false
+                entry.column.savedWidth = nil
+                entry.column.hasManualSingleWindowWidthOverride = false
+                entry.column.presetWidthIdx = nil
+            } else {
+                entry.column.height = .proportion(proportion)
+                entry.column.cachedHeight = 0
+                entry.column.isFullHeight = false
+                entry.column.savedHeight = nil
+                entry.column.hasManualSingleWindowHeightOverride = false
+                entry.column.presetWidthIdx = nil
+            }
+        }
+        return true
+    }
+
     func ensureColumnVisible(
         _ column: NiriContainer,
         context: NiriInteractionContext,

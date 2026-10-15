@@ -69,6 +69,10 @@ enum StructuralMutationOutcome: Equatable {
             )
         }
 
+        var sizingGeometry: NiriSizingGeometry {
+            NiriSizingGeometry(workingFrame: insetFrame, gaps: gap, orientation: orientation)
+        }
+
         var primarySpanKeyPath: KeyPath<NiriContainer, CGFloat> {
             switch orientation {
             case .horizontal: \.cachedWidth
