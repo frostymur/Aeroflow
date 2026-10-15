@@ -82,10 +82,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         // Accessibility list, so an update's re-grant is a single toggle
         // instead of remove-old-entry + re-add + toggle. Ad-hoc builds change
         // code hash, so the prior grant is orphaned and the new build needs a
-        // fresh entry — the native prompt creates it. The onboarding window
-        // below stays up as the persistent re-entry point if the dialog is
-        // dismissed (headless app has no menu bar).
-        PermissionOnboardingController.shared.stateChanged(granted: false)
+        // fresh entry — the native prompt creates it.
         // NSDictionary literal form (as in AXManager+Applications): the
         // `as CFDictionary` cast on a [String: Bool] literal crashed inside
         // AXIsProcessTrustedWithOptions on first ungranted launch (SIGSEGV in
@@ -94,14 +91,13 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         _ = AXIsProcessTrustedWithOptions(options)
         appLogger
             .notice(
-                "Accessibility not granted yet; AeroFlow starts once it is granted (onboarding window, or System Settings → Privacy & Security)."
+                "Accessibility not granted yet; AeroFlow starts once it is granted (System Settings → Privacy & Security)."
             )
         permissionPollTask = Task { @MainActor [weak self] in
             while !Task.isCancelled, !Self.requiredPermissionsGranted() {
                 try? await Task.sleep(for: .seconds(1))
             }
             guard !Task.isCancelled else { return }
-            PermissionOnboardingController.shared.stateChanged(granted: true)
             self?.finishBootstrap()
         }
     }
