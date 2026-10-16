@@ -18,8 +18,7 @@ extension NiriLayoutHandler {
             in: pass.wsId,
             selectedNodeId: selectedNodeId,
             focusedToken: preferredFocusToken,
-            containerSizingStates: containerSizingStates,
-            sizingGeometry: pass.sizingGeometry
+            containerSizingStates: containerSizingStates
         )
         for window in pass.windows {
             pass.engine.updateWindowConstraints(
