@@ -460,12 +460,13 @@ final class WorkspaceSlotNavigationTests: XCTestCase {
     }
 
     private func makeFixture(
-        windowFocusOperations: WindowFocusOperations = WindowFocusOperations(
+        windowFocusOperations: WindowFocusOperations? = nil
+    ) throws -> Fixture {
+        let windowFocusOperations = windowFocusOperations ?? WindowFocusOperations(
             activateApp: { _ in },
             focusSpecificWindow: { _, _, _ in },
             raiseWindow: { _ in }
         )
-    ) throws -> Fixture {
         let monitorA = makeMonitor(displayId: 473_100, name: "A", frame: CGRect(x: 0, y: 0, width: 1000, height: 800))
         let monitorB = makeMonitor(
             displayId: 473_101,

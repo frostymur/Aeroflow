@@ -12,12 +12,13 @@ import XCTest
 enum WindowAdmissionTestSupport {
     static func controller(
         prefix: String = "AeroFlowWindowAdmissionTests",
-        windowFocusOperations: WindowFocusOperations = WindowFocusOperations(
+        windowFocusOperations: WindowFocusOperations? = nil
+    ) -> WMController {
+        let windowFocusOperations = windowFocusOperations ?? WindowFocusOperations(
             activateApp: { _ in },
             focusSpecificWindow: { _, _, _ in },
             raiseWindow: { _ in }
         )
-    ) -> WMController {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("\(prefix)-\(UUID().uuidString)", isDirectory: true)
         let settings = SettingsStore(
