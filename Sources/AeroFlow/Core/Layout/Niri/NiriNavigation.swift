@@ -266,25 +266,52 @@ extension NiriLayoutEngine {
         gaps: CGFloat,
         orientation: Monitor.Orientation
     ) {
+        let siblingCount = projectedColumns(in: workspaceId).count
         for container in columns(in: workspaceId) {
             switch orientation {
-            case .horizontal where container.cachedWidth <= 0:
+            case .horizontal where container.cachedWidth <= 0
+                || primarySpanCacheIsStale(container, orientation: .horizontal, siblingCount: siblingCount):
                 container.resolveAndCacheWidth(
                     workingAreaWidth: workingFrame.width,
                     gaps: gaps,
                     contentInset: tabContentInset(for: container),
-                    siblingCount: columns(in: workspaceId).count
+                    siblingCount: siblingCount
                 )
-            case .vertical where container.cachedHeight <= 0:
+            case .vertical where container.cachedHeight <= 0
+                || primarySpanCacheIsStale(container, orientation: .vertical, siblingCount: siblingCount):
                 container.resolveAndCacheHeight(
                     workingAreaHeight: workingFrame.height,
                     gaps: gaps,
-                    siblingCount: columns(in: workspaceId).count
+                    siblingCount: siblingCount
                 )
             case .horizontal,
                  .vertical:
                 break
             }
+        }
+    }
+
+    /// A derived (proportional, unpinned) span resolved for a different column
+    /// count must be re-resolved: proportions reserve one gap per sibling, so a
+    /// span resolved while the column was alone is wider than the fit. A nil
+    /// record means the span was not produced by the resolver (manual resize,
+    /// balance-sizes, saved restores), so those pixels are kept.
+    func primarySpanCacheIsStale(
+        _ column: NiriContainer,
+        orientation: Monitor.Orientation,
+        siblingCount: Int
+    ) -> Bool {
+        switch orientation {
+        case .horizontal:
+            guard column.hasDerivedPrimarySpan(.horizontal),
+                  let resolvedWith = column.cachedWidthSiblingCount
+            else { return false }
+            return resolvedWith != siblingCount
+        case .vertical:
+            guard column.hasDerivedPrimarySpan(.vertical),
+                  let resolvedWith = column.cachedHeightSiblingCount
+            else { return false }
+            return resolvedWith != siblingCount
         }
     }
 

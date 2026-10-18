@@ -148,7 +148,13 @@ extension NiriLayoutEngine {
         {
             switch orientation {
             case .horizontal:
-                if projectedColumn.column.cachedWidth <= 0 {
+                if projectedColumn.column.cachedWidth <= 0
+                    || primarySpanCacheIsStale(
+                        projectedColumn.column,
+                        orientation: .horizontal,
+                        siblingCount: projectedColumns.count
+                    )
+                {
                     projectedColumn.column.resolveAndCacheWidth(
                         workingAreaWidth: area.workingFrame.width,
                         gaps: primaryGap,
@@ -159,7 +165,13 @@ extension NiriLayoutEngine {
                     )
                 }
             case .vertical:
-                if projectedColumn.column.cachedHeight <= 0 {
+                if projectedColumn.column.cachedHeight <= 0
+                    || primarySpanCacheIsStale(
+                        projectedColumn.column,
+                        orientation: .vertical,
+                        siblingCount: projectedColumns.count
+                    )
+                {
                     projectedColumn.column.resolveAndCacheHeight(
                         workingAreaHeight: area.workingFrame.height,
                         gaps: primaryGap,

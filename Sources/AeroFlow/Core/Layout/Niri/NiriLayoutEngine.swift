@@ -358,7 +358,9 @@ extension NiriLayoutEngine {
         column.savedHeight = state.savedHeight
         column.hasManualSingleWindowHeightOverride = state.hasManualSingleWindowHeightOverride
         column.cachedWidth = 0
+        column.cachedWidthSiblingCount = nil
         column.cachedHeight = 0
+        column.cachedHeightSiblingCount = nil
         column.widthAnimation = nil
         column.targetWidth = nil
     }

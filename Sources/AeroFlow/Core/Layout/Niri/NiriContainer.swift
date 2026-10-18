@@ -27,6 +27,12 @@ class NiriContainer: NiriNode {
 
     var cachedHeight: CGFloat = 0
 
+    /// Sibling (column) count used for the last resolver-produced span. A
+    /// proportional span is (availableSpace - gap * (n - 1)) * proportion, so
+    /// a cached span is only valid for the count it was resolved with.
+    var cachedWidthSiblingCount: Int?
+    var cachedHeightSiblingCount: Int?
+
     var isFullHeight: Bool = false
 
     var savedHeight: ProportionalSize?
@@ -120,8 +126,10 @@ class NiriContainer: NiriNode {
     func invalidateCachedPrimarySpans() {
         if targetWidth == nil {
             cachedWidth = 0
+            cachedWidthSiblingCount = nil
         }
         cachedHeight = 0
+        cachedHeightSiblingCount = nil
     }
 
     func widthBounds(contentInset: CGFloat = 0) -> (min: CGFloat, max: CGFloat?) {
@@ -186,6 +194,7 @@ class NiriContainer: NiriNode {
             contentInset: contentInset,
             siblingCount: siblingCount
         )
+        cachedWidthSiblingCount = siblingCount
     }
 
     func resolveAndCacheHeight(workingAreaHeight: CGFloat, gaps: CGFloat, siblingCount: Int = 1) {
@@ -195,16 +204,42 @@ class NiriContainer: NiriNode {
             gaps: gaps,
             siblingCount: siblingCount
         )
+        cachedHeightSiblingCount = siblingCount
     }
 
     func invalidateCachedPrimarySpan(orientation: Monitor.Orientation) {
         switch orientation {
         case .horizontal:
             cachedWidth = 0
+            cachedWidthSiblingCount = nil
             widthAnimation = nil
             targetWidth = nil
         case .vertical:
             cachedHeight = 0
+            cachedHeightSiblingCount = nil
+        }
+    }
+
+    /// True when the span is a proportional spec nobody pinned by hand: no
+    /// manual resize/preset, no full-span toggle, no in-flight width
+    /// animation. Only these spans may be re-resolved for a new column count;
+    /// user-pinned spans keep their pixels.
+    func hasDerivedPrimarySpan(_ orientation: Monitor.Orientation) -> Bool {
+        switch orientation {
+        case .horizontal:
+            guard !isFullWidth,
+                  !hasManualSingleWindowWidthOverride,
+                  widthAnimation == nil,
+                  targetWidth == nil,
+                  case .proportion = width
+            else { return false }
+            return true
+        case .vertical:
+            guard !isFullHeight,
+                  !hasManualSingleWindowHeightOverride,
+                  case .proportion = height
+            else { return false }
+            return true
         }
     }
 
@@ -374,6 +409,7 @@ extension NiriContainer {
     ) -> Bool {
         guard animated else {
             cachedWidth = newWidth
+            cachedWidthSiblingCount = nil
             widthAnimation = nil
             targetWidth = nil
             return false
@@ -392,6 +428,7 @@ extension NiriContainer {
             displayRefreshRate: displayRefreshRate
         )
         targetWidth = newWidth
+        cachedWidthSiblingCount = nil
         return true
     }
 
@@ -405,6 +442,7 @@ extension NiriContainer {
             if let target = targetWidth {
                 cachedWidth = target
             }
+            cachedWidthSiblingCount = nil
             widthAnimation = nil
             targetWidth = nil
             return false
@@ -422,6 +460,7 @@ extension NiriContainer {
         if let targetWidth {
             cachedWidth = targetWidth
         }
+        cachedWidthSiblingCount = nil
         widthAnimation = nil
         targetWidth = nil
     }
