@@ -7,6 +7,8 @@ import Foundation
 import QuartzCore
 
 extension DwindleLayoutHandler {
+    /// Legacy grouping path, only reachable with
+    /// `[dwindle] moveGroupsWindows = true`.
     private func groupWindowInDirection(
         _ token: WindowToken,
         direction: Direction,
@@ -55,17 +57,22 @@ extension DwindleLayoutHandler {
                 return
             }
 
+            let groupsWindowsOnMove = controller?.settings.dwindle.moveGroupsWindows == true
             let moveOutcome: WindowMoveOutcome
             if sourceIsGrouped {
                 moveOutcome = engine
                     .ungroupWindow(token, direction: direction, in: workspaceId) ? .movedWithinWorkspace : .blocked
-            } else {
+            } else if groupsWindowsOnMove {
                 moveOutcome = groupWindowInDirection(
                     token,
                     direction: direction,
                     workspaceId: workspaceId,
                     engine: engine
                 )
+            } else {
+                // Default: moving a plain window swaps it with its neighbor
+                // instead of joining it as a tab.
+                moveOutcome = engine.swapWindowOutcome(direction: direction, in: workspaceId)
             }
             guard moveOutcome == .movedWithinWorkspace else {
                 outcome = moveOutcome
@@ -73,7 +80,11 @@ extension DwindleLayoutHandler {
             }
 
             outcome = .movedWithinWorkspace
-            recordLayoutOperation(.groupMembershipChanged(token: token), in: workspaceId)
+            if sourceIsGrouped || groupsWindowsOnMove {
+                recordLayoutOperation(.groupMembershipChanged(token: token), in: workspaceId)
+            } else {
+                recordLayoutOperation(.windowsSwapped, in: workspaceId)
+            }
             commitGroupSelection(token, workspaceId: workspaceId, focusAfterLayout: true)
         }
         return outcome

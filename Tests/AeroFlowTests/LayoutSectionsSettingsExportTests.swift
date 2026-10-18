@@ -33,7 +33,8 @@ final class LayoutSectionsSettingsExportTests: XCTestCase {
             "splitWidthMultiplier": .float(1),
             "singleWindowFit": .string("gapped"),
             "useGlobalGaps": .boolean(true),
-            "moveToRootStable": .boolean(true)
+            "moveToRootStable": .boolean(true),
+            "moveGroupsWindows": .boolean(false)
         ]))
         XCTAssertEqual(try SettingsTOMLCodec.decode(data), defaults)
     }
@@ -78,6 +79,15 @@ final class LayoutSectionsSettingsExportTests: XCTestCase {
         XCTAssertNil(niri["containerPrimarySpanPresets"])
         XCTAssertNil(niri["defaultContainerPrimarySpan"])
         XCTAssertEqual(try SettingsTOMLCodec.decode(data), export)
+    }
+
+    func testOptionalDwindleMoveGroupsWindowsDefaultsToDisabled() throws {
+        let source = String(decoding: try SettingsTOMLCodec.encode(.defaults()), as: UTF8.self)
+        let withoutKey = try removing(key: "moveGroupsWindows", from: "dwindle", in: source)
+        let decoded = try SettingsTOMLCodec.decode(Data(withoutKey.utf8))
+        // Absent means disabled: nil and false both keep the move key as swap.
+        XCTAssertNotEqual(decoded.dwindle.moveGroupsWindows, true)
+        XCTAssertEqual(decoded.dwindle.moveGroupsWindows ?? false, false)
     }
 
     private func removing(key: String, from section: String, in source: String) throws -> String {

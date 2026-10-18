@@ -93,6 +93,7 @@ struct SettingsExport: Equatable {
         var singleWindowFit: SingleWindowFit
         var useGlobalGaps: Bool
         var moveToRootStable: Bool
+        var moveGroupsWindows: Bool? = false
     }
 
     struct Gestures: Codable, Equatable {
@@ -214,7 +215,8 @@ extension SettingsExport.Dwindle {
             splitWidthMultiplier: 1.0,
             singleWindowFit: .gapped,
             useGlobalGaps: true,
-            moveToRootStable: true
+            moveToRootStable: true,
+            moveGroupsWindows: false
         )
     }
 }

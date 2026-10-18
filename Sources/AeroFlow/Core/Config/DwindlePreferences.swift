@@ -42,6 +42,13 @@ final class DwindlePreferences {
         didSet { onChange?() }
     }
 
+    /// When enabled, `move.<direction>` in the dwindle layout joins the window
+    /// into the neighboring tile as a tab (legacy behavior). Disabled by
+    /// default: the move key swaps windows instead of creating tabs.
+    var moveGroupsWindows = DwindlePreferences.defaults.moveGroupsWindows ?? false {
+        didSet { onChange?() }
+    }
+
     var monitorOverrides: [MonitorDwindleSettings] = [] {
         didSet { onChange?() }
     }
@@ -53,7 +60,8 @@ final class DwindlePreferences {
             splitWidthMultiplier: splitWidthMultiplier,
             singleWindowFit: singleWindowFit,
             useGlobalGaps: useGlobalGaps,
-            moveToRootStable: moveToRootStable
+            moveToRootStable: moveToRootStable,
+            moveGroupsWindows: moveGroupsWindows
         )
     }
 
@@ -64,6 +72,7 @@ final class DwindlePreferences {
         singleWindowFit = dwindle.singleWindowFit
         useGlobalGaps = dwindle.useGlobalGaps
         moveToRootStable = dwindle.moveToRootStable
+        moveGroupsWindows = dwindle.moveGroupsWindows ?? false
     }
 
     func settings(for monitor: Monitor) -> MonitorDwindleSettings? {

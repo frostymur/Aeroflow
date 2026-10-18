@@ -147,7 +147,7 @@ final class DwindleGroupFocusIntegrationTests: XCTestCase {
         )
     }
 
-    func testMoveExtractsThenJoinsAndReportsOnlyGenuineEdge() throws {
+    func testMoveExtractsThenSwapsWithoutRegrouping() throws {
         let fixture = try makeFixture { _, _ in }
         let preservedTileId = try XCTUnwrap(
             fixture.engine.tileSnapshot(for: fixture.inactiveToken, in: fixture.workspaceId)?.id
@@ -174,16 +174,36 @@ final class DwindleGroupFocusIntegrationTests: XCTestCase {
             fixture.controller.dwindleLayoutHandler.moveWindow(direction: .left),
             .atWorkspaceEdge
         )
+        let activeLeafIdBefore = try XCTUnwrap(
+            fixture.engine.findNode(for: fixture.activeToken, in: fixture.workspaceId)?.id
+        )
+        let inactiveLeafIdBefore = try XCTUnwrap(
+            fixture.engine.findNode(for: fixture.inactiveToken, in: fixture.workspaceId)?.id
+        )
         XCTAssertEqual(
             fixture.controller.dwindleLayoutHandler.moveWindow(direction: .right),
             .movedWithinWorkspace
         )
-        let regrouped = try XCTUnwrap(
+        let moved = try XCTUnwrap(
             fixture.engine.tileSnapshot(for: fixture.activeToken, in: fixture.workspaceId)
         )
-        XCTAssertEqual(regrouped.id, preservedTileId)
-        XCTAssertEqual(regrouped.members.map(\.token), [fixture.inactiveToken, fixture.activeToken])
-        XCTAssertEqual(regrouped.activeToken, fixture.activeToken)
+        XCTAssertEqual(moved.members.map(\.token), [fixture.activeToken])
+        XCTAssertEqual(moved.activeToken, fixture.activeToken)
+
+        let stationary = try XCTUnwrap(
+            fixture.engine.tileSnapshot(for: fixture.inactiveToken, in: fixture.workspaceId)
+        )
+        XCTAssertEqual(stationary.id, preservedTileId)
+        XCTAssertEqual(stationary.members.map(\.token), [fixture.inactiveToken])
+        // The two leaves swapped slots; the moved window keeps its own tile.
+        XCTAssertEqual(
+            fixture.engine.findNode(for: fixture.activeToken, in: fixture.workspaceId)?.id,
+            inactiveLeafIdBefore
+        )
+        XCTAssertEqual(
+            fixture.engine.findNode(for: fixture.inactiveToken, in: fixture.workspaceId)?.id,
+            activeLeafIdBefore
+        )
     }
 
     func testMoveExtractsProjectedVisibleMemberWhileGroupedPeerIsAppHidden() throws {
@@ -212,6 +232,8 @@ final class DwindleGroupFocusIntegrationTests: XCTestCase {
 
     func testMoveFromGroupedSourceToGroupedNeighborIsTwoStep() throws {
         let fixture = try makeFixture { _, _ in }
+        // Legacy grouping-on-move contract; off by default.
+        fixture.controller.settings.dwindle.moveGroupsWindows = true
         let destination = addGroupedNeighbor(to: fixture)
         let sourceTileId = try XCTUnwrap(
             fixture.engine.tileSnapshot(for: fixture.activeToken, in: fixture.workspaceId)?.id
